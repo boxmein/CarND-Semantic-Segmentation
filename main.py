@@ -59,26 +59,26 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     # Build the decoder:
 
     # 1x1 conv
-    out = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    out = tf.layers.conv2d(vgg_layer7_out, num_classes, kernel_size=1, strides=1, padding='SAME', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     
     # Upsample
-    out = tf.layers.conv2d_transpose(out, num_classes, 4, 2, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    out = tf.layers.conv2d_transpose(out, num_classes, kernel_size=4, strides=2, padding='SAME', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     
     # Put a 1x1 before VGG 4
-    l4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    l4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, kernel_size=1, strides=1, padding='SAME', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     # SKIP CONNECTION!
     out = tf.add(l4_1x1, out)
 
     # Upsample
-    out = tf.layers.conv2d_transpose(out, num_classes, 4, 2, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    out = tf.layers.conv2d_transpose(out, num_classes, kernel_size=4, strides=2, padding='SAME', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     
     # Put a 1x1 before VGG 3
-    l3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    l3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, kernel_size=1, strides=1, padding='SAME', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     # SKIP CONNECTION!
     out = tf.add(l3_1x1, out)
 
     # Huge upsample
-    out = tf.layers.conv2d_transpose(out, num_classes, 32, 8, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    out = tf.layers.conv2d_transpose(out, num_classes, kernel_size=16, strides=8, padding='SAME', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     return out
 tests.test_layers(layers)
@@ -101,7 +101,7 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     logits = tf.reshape(nn_last_layer, (-1, num_classes))
     corrects = tf.reshape(correct_label, (-1, num_classes))
     xent_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=corrects)) 
-    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(xent_loss)
+    optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate, beta1=.9, beta2=.999, epsilon=1e-8).minimize(xent_loss)
     return logits, optimizer, xent_loss
 tests.test_optimize(optimize)
 
