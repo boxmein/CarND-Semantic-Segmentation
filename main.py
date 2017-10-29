@@ -62,7 +62,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     out = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     
     # Upsample
-    out = tf.layers.conv2d_transpose(out, num_classes, 5, 2, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    out = tf.layers.conv2d_transpose(out, num_classes, 4, 2, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     
     # Put a 1x1 before VGG 4
     l4_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
@@ -70,7 +70,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     out = tf.add(l4_1x1, out)
 
     # Upsample
-    out = tf.layers.conv2d_transpose(out, num_classes, 5, 2, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    out = tf.layers.conv2d_transpose(out, num_classes, 4, 2, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     
     # Put a 1x1 before VGG 3
     l3_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
@@ -78,7 +78,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     out = tf.add(l3_1x1, out)
 
     # Huge upsample
-    out = tf.layers.conv2d_transpose(out, num_classes, 16, 8, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    out = tf.layers.conv2d_transpose(out, num_classes, 32, 8, padding='same', kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
 
     return out
 tests.test_layers(layers)
@@ -128,7 +128,7 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     for i in range(epochs):
         print("EPOCH ", i)
         for image, label in get_batches_fn(batch_size):
-            trained_image, xent_loss = sess.run([train_op, cross_entropy_loss], feed_dict={ input_image: image, correct_label: label, keep_prob: 0.5, learning_rate: 0.001 })
+            trained_image, xent_loss = sess.run([train_op, cross_entropy_loss], feed_dict={ input_image: image, correct_label: label, keep_prob: 0.5, learning_rate: 0.0009 })
             print("LOSS: ", xent_loss)
 
 
@@ -142,8 +142,8 @@ def run():
     runs_dir = './runs'
     tests.test_for_kitti_dataset(data_dir)
 
-    epochs = 6
-    batch_size = 8
+    epochs = 40
+    batch_size = 16
 
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
@@ -151,6 +151,8 @@ def run():
     # OPTIONAL: Train and Inference on the cityscapes dataset instead of the Kitti dataset.
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
+
+    #saver = tf.train.Saver()
 
     with tf.Session() as sess:
         # Path to vgg model
@@ -178,6 +180,8 @@ def run():
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image)
 
         # OPTIONAL: Apply the trained model to a video
+        
+        #saver.save(sess, 'model')
 
 
 if __name__ == '__main__':
